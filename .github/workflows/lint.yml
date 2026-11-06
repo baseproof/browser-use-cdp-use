@@ -69,7 +69,9 @@ jobs:
       - name: Publication refusal and type checks
         run: |
           python -m unittest discover -s .github/scripts -p 'test_private_release.py' -v
-          mypy --strict cdp_use/observation.py
+          # Strictly check the new typed observation contract. Upstream's
+          # generated client modules are outside this focused type gate.
+          mypy --strict --follow-imports=silent cdp_use/observation.py
           mypy --check-untyped-defs --ignore-missing-imports .github/scripts/private_release.py
       - uses: actions/upload-artifact@v4
         if: always()

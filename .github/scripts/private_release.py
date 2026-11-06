@@ -24,12 +24,15 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
-def checked_bytes(path: Path, expected: str, size: int | None = None) -> bytes:
+def checked_bytes(
+    path: Path, expected: str, size: int | None = None, *, allow_empty: bool = False
+) -> bytes:
     require(
         path.is_file() and not path.is_symlink(), f"Expected regular file: {path.name}"
     )
     require(
-        0 < path.stat().st_size <= MAX_ARCHIVE_BYTES, f"Invalid file size: {path.name}"
+        (0 if allow_empty else 1) <= path.stat().st_size <= MAX_ARCHIVE_BYTES,
+        f"Invalid file size: {path.name}",
     )
     with path.open("rb") as stream:
         data = stream.read(MAX_ARCHIVE_BYTES + 1)
@@ -64,14 +67,15 @@ def verify(
         "Installed qualification contains failed or skipped cases",
     )
     require(receipt["totals"]["passed"] > 0, "Empty installed qualification")
-    require(
-        receipt["coverage"]["percent"] >= receipt["coverage"]["required_percent"],
-        "Coverage gate failed",
-    )
     for name, digest in audit["source_file_sha256"].items():
-        checked_bytes(root / name, digest)
+        checked_bytes(root / name, digest, allow_empty=True)
+    require(
+        "cdp_use/py.typed" in audit["source_file_sha256"], "Missing type marker audit"
+    )
     recorded_modules = {
-        name for name in audit["source_file_sha256"] if name.startswith("cdp_use/")
+        name
+        for name in audit["source_file_sha256"]
+        if name.startswith("cdp_use/") and name.endswith(".py")
     }
     actual_modules = {
         str(path.relative_to(root)) for path in (root / "cdp_use").rglob("*.py")

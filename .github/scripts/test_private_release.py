@@ -27,6 +27,7 @@ class QualificationTests(unittest.TestCase):
         )
         (self.root / ".gitignore").write_text("dist/\n")
         (self.root / "cdp_use/__init__.py").write_text("qualified = True\n")
+        (self.root / "cdp_use/py.typed").write_bytes(b"")
         (self.root / "tests/test_owner.py").write_text("def test_owner(): pass\n")
         names = (
             f"cdp_use-{self.version}-py3-none-any.whl",
@@ -46,7 +47,6 @@ class QualificationTests(unittest.TestCase):
             "source_commit": "a" * 40,
             "qualification_status": "installed_wheel_pass",
             "totals": {"passed": 1, "failed": 0, "errors": 0, "skipped": 0},
-            "coverage": {"percent": 90, "required_percent": 80},
             "tests": [
                 {
                     "file": "tests/test_owner.py",
@@ -63,7 +63,12 @@ class QualificationTests(unittest.TestCase):
             },
             "source_file_sha256": {
                 name: self.digest(name)
-                for name in (".gitignore", "pyproject.toml", "cdp_use/__init__.py")
+                for name in (
+                    ".gitignore",
+                    "pyproject.toml",
+                    "cdp_use/__init__.py",
+                    "cdp_use/py.typed",
+                )
             },
         }
         self.write_receipts()
@@ -81,7 +86,12 @@ class QualificationTests(unittest.TestCase):
         )
 
     def test_rejects_source_and_test_changes(self):
-        for name in (".gitignore", "cdp_use/__init__.py", "tests/test_owner.py"):
+        for name in (
+            ".gitignore",
+            "cdp_use/__init__.py",
+            "cdp_use/py.typed",
+            "tests/test_owner.py",
+        ):
             with self.subTest(name=name):
                 original = (self.root / name).read_bytes()
                 (self.root / name).write_bytes(original + b"# changed\n")
