@@ -13,6 +13,13 @@ bounded delivery adapter; RPA supplies execution and artifact ownership.
 
 ## Qualification and publication
 
+Version `1.4.5+baseproof.1` is published and independently verified. The
+[publication receipt](qualification/publication-1.4.5+baseproof.1.json) records
+the exact wheel/sdist hashes, lengths and separate publisher/reader identities.
+The [tagged release](https://github.com/baseproof/browser-use-cdp-use/releases/tag/v1.4.5%2Bbaseproof.1)
+retains both archives and qualification logs. This release used existing local
+service-account impersonation; no new repository secret access was configured.
+
 Build the sdist and wheel from the reviewed source once, and retain those exact
 archives. Qualify the installed wheel with the real loopback WebSocket tests,
 type/lint checks, original-source comparison and the consuming browser stack.
