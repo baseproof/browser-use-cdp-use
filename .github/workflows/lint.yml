@@ -59,7 +59,7 @@ jobs:
       - name: Build and install the candidate wheel
         run: |
           uv pip install --system hatchling==1.31.0 mypy==2.4.1
-          uv build --no-build-isolation --out-dir build/distributions
+          uv build --python "$(command -v python)" --no-build-isolation --out-dir build/distributions
           uv pip install --system build/distributions/*.whl
           uv pip check --system
       - name: Test the installed transport using real loopback WebSockets
