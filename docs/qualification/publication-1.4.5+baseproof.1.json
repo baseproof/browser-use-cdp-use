@@ -1,0 +1,27 @@
+{
+  "package": "cdp-use",
+  "version": "1.4.5+baseproof.1",
+  "repository": "https://us-python.pkg.dev/legalai-460612/baseproof-ai/",
+  "publisher_identity": "rpa-sdk-publisher@legalai-460612.iam.gserviceaccount.com",
+  "reader_identity": "rpa-sdk-reader@legalai-460612.iam.gserviceaccount.com",
+  "authentication": "existing local service-account impersonation",
+  "source_commit": "e3b3dc18ee8789645b8f49245a3fead143d4bac0",
+  "requested_uploads": [
+    "cdp_use-1.4.5+baseproof.1-py3-none-any.whl",
+    "cdp_use-1.4.5+baseproof.1.tar.gz"
+  ],
+  "upload_exit": 0,
+  "independently_verified": {
+    "cdp_use-1.4.5+baseproof.1-py3-none-any.whl": {
+      "sha256": "764eb7f9c11aa3fe748b4fd5878a80fdaf2ed5209cdafdb233de6328942dd2ee",
+      "bytes": 354019,
+      "resource": "projects/legalai-460612/locations/us/repositories/baseproof-ai/files/cdp-use%2Fcdp_use-1.4.5+baseproof.1-py3-none-any.whl"
+    },
+    "cdp_use-1.4.5+baseproof.1.tar.gz": {
+      "sha256": "c1074c08d5fac98a64288625e51bd7b0957605e6cba5e3700cf8af2811d68594",
+      "bytes": 196894,
+      "resource": "projects/legalai-460612/locations/us/repositories/baseproof-ai/files/cdp-use%2Fcdp_use-1.4.5+baseproof.1.tar.gz"
+    }
+  },
+  "complete": true
+}
