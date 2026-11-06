@@ -1,0 +1,67 @@
+{
+  "version": "1.4.5+baseproof.1",
+  "source_commit": "6e36efd12863585bb20c31811881af5fe41e26be",
+  "qualification_status": "installed_wheel_pass",
+  "totals": {
+    "passed": 17,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "file": "tests/test_observation.py",
+      "source_sha256": "ca3f92d1351236510883ebd47b62e7fa013e2cb8fb2ece13c5da60e20b511486",
+      "passed": 17
+    }
+  ],
+  "archives": [
+    {
+      "filename": "cdp_use-1.4.5+baseproof.1-py3-none-any.whl",
+      "sha256": "764eb7f9c11aa3fe748b4fd5878a80fdaf2ed5209cdafdb233de6328942dd2ee",
+      "bytes": 354019
+    },
+    {
+      "filename": "cdp_use-1.4.5+baseproof.1.tar.gz",
+      "sha256": "c1074c08d5fac98a64288625e51bd7b0957605e6cba5e3700cf8af2811d68594",
+      "bytes": 196894
+    }
+  ],
+  "native_linux": {
+    "run_id": 42157467600,
+    "attempt": 1,
+    "source_commit": "efb344bb33bd1a47d11e09413aa4923aaaa4b128",
+    "python": "3.14.10",
+    "installed_tests_passed": 17,
+    "publication_tests_passed": 8,
+    "archive_bytes_equal": true,
+    "type_lint_import_checks": "passed"
+  },
+  "browser_integration": {
+    "passed": 1,
+    "cdp_installation": "reviewed wheel, no CDP source overlay",
+    "sdk_source_commit": "d7e8b2214b2636f265a6f46b6e7c2a74de0d05e9",
+    "sdk_source_overlay": true,
+    "test_file": "tests/test_command_observation_browser.py",
+    "test_sha256": "283d9533dfee45544aba0fad06092b6c97dabb432ba43658f5e653d263ca087b",
+    "base_image": "sha256:1c65a117297f260a4de8c5197d138789ec1071567a9efb4f23ccc590b679918a",
+    "scope": "startup, automatic reconnect, navigation, browser-use, independent recording; not final SDK image qualification"
+  },
+  "logs": [
+    {
+      "file": "dist/reviewed-installed-linux.log",
+      "sha256": "70f6d8f96f4cb0c1f7ff8460e4808d120d064aca19e83ffecbbf729b2525249f",
+      "bytes": 4040
+    },
+    {
+      "file": "dist/reviewed-browser-integration.log",
+      "sha256": "eb0f2aa997aad83132b3d1d6fdcd131e820d666f9530d760dd44cfaaf28e73e1",
+      "bytes": 4239
+    },
+    {
+      "file": "dist/native-linux-qualification.log",
+      "sha256": "0f0a8a9f3dde973c4d8daa1a81776c544aa3c578540977318a4f196ca282d72a",
+      "bytes": 122996
+    }
+  ]
+}
