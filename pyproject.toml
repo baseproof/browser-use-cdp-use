@@ -1,12 +1,13 @@
 [project]
 name = "cdp-use"
-version = "1.4.5"
+version = "1.4.5+baseproof.1"
 description = "Type safe generator/client library for CDP"
 authors = [{ name = "Browser Use" }]
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 classifiers = [
+    "Private :: Do Not Upload",
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -20,8 +21,9 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/browser-use/cdp-use"
-Repository = "https://github.com/browser-use/cdp-use"
-Issues = "https://github.com/browser-use/cdp-use/issues"
+Repository = "https://github.com/baseproof/browser-use-cdp-use"
+Upstream = "https://github.com/browser-use/cdp-use"
+Issues = "https://github.com/baseproof/browser-use-cdp-use/issues"
 
 [build-system]
 requires = ["hatchling==1.31.0"]

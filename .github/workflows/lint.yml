@@ -11,6 +11,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   lint-syntax:
     name: syntax-errors
@@ -41,3 +44,37 @@ jobs:
         with:
           enable-cache: true
       - run: uv run python -c "from cdp_use import CDPClient; print('OK')"
+
+  installed-observation:
+    name: installed observation contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.18'
+      - name: Build and install the candidate wheel
+        run: |
+          uv pip install --system hatchling==1.31.0 mypy==2.4.1
+          uv build --no-build-isolation --out-dir build/distributions
+          uv pip install --system build/distributions/*.whl
+          uv pip check --system
+      - name: Test the installed transport using real loopback WebSockets
+        run: |
+          cd /tmp
+          python -m unittest discover -s "$GITHUB_WORKSPACE/tests" -p 'test_observation.py' -v
+      - name: Publication refusal and type checks
+        run: |
+          python -m unittest discover -s .github/scripts -p 'test_private_release.py' -v
+          mypy --strict cdp_use/observation.py
+          mypy --check-untyped-defs --ignore-missing-imports .github/scripts/private_release.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cdp-use-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/distributions/*
+          if-no-files-found: warn
+          retention-days: 90
