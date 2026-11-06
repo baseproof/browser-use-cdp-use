@@ -2,6 +2,12 @@
 
 A **type-safe Python client generator** for the **Chrome DevTools Protocol (CDP)**. This library automatically generates Python bindings with full TypeScript-like type safety from the official CDP protocol specifications.
 
+This Baseproof-maintained fork adds an optional [transport observation contract](docs/observation.md)
+to the upstream client. Private releases use distinct local versions and preserve
+the upstream authorship and MIT license. See the [private release contract](docs/private-release.md)
+for archive verification and consumer qualification. No navigation or site policy
+is added by this fork.
+
 ## 🚀 Features
 
 - **🔒 Type Safety**: Full type hints with `TypedDict` classes for all CDP commands, parameters, and return types
@@ -16,18 +22,20 @@ A **type-safe Python client generator** for the **Chrome DevTools Protocol (CDP)
 1. **Clone and install dependencies:**
 
 ```bash
-git clone https://github.com/browser-use/cdp-use
-cd cdp-use
-uv sync  # or pip install -r requirements.txt
+git clone https://github.com/baseproof/browser-use-cdp-use
+cd browser-use-cdp-use
+uv sync --locked
 ```
 
-2. **Generate the CDP client library:**
+2. **Use the checked-in client bindings.** Protocol regeneration is a separate
+   development change that needs its own review and qualification:
 
 ```bash
 python -m cdp_use.generator
 ```
 
-This automatically downloads the latest protocol specifications and generates all type-safe bindings.
+This development command downloads the latest protocol specifications and
+regenerates bindings; it is not part of installing or adopting a qualified release.
 
 ## 📖 Usage Examples
 

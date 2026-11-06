@@ -7,6 +7,14 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import websockets
 
+from cdp_use.observation import (
+    USE_CONTEXT,
+    ObservationHealth,
+    ObserverFactory,
+    _UseContext,
+    _bind_client,
+)
+
 if TYPE_CHECKING:
     from cdp_use.cdp.library import CDPLibrary
     from cdp_use.cdp.registration_library import CDPRegistrationLibrary
@@ -232,6 +240,8 @@ class CDPClient:
         url: str,
         additional_headers: Optional[Dict[str, str]] = None,
         max_ws_frame_size: int = 100 * 1024 * 1024,  # Default 100MB
+        *,
+        observer_factory: ObserverFactory | None | _UseContext = USE_CONTEXT,
     ):
         self.url = url
         self.additional_headers = additional_headers
@@ -240,6 +250,7 @@ class CDPClient:
         self.msg_id: int = 0
         self.pending_requests: Dict[int, asyncio.Future] = {}
         self._message_handler_task = None
+        self._observation = _bind_client(observer_factory)
 
         # Initialize the type-safe CDP library
         from cdp_use.cdp.library import CDPLibrary
@@ -251,6 +262,13 @@ class CDPClient:
         self.register: "CDPRegistrationLibrary" = CDPRegistrationLibrary(
             self._event_registry
         )
+
+    @property
+    def observation_health(self) -> ObservationHealth:
+        """Diagnostic callback health; never a browser readiness decision."""
+        if self._observation is None:
+            return ObservationHealth(enabled=False)
+        return self._observation.health
 
     async def __aenter__(self):
         """Async context manager entry"""
@@ -274,7 +292,22 @@ class CDPClient:
         }
         if self.additional_headers:
             connect_kwargs["additional_headers"] = self.additional_headers
-        self.ws = await websockets.connect(self.url, **connect_kwargs)
+        if self._observation is not None:
+            self._observation.start(len(self.pending_requests))
+        try:
+            self.ws = await websockets.connect(self.url, **connect_kwargs)
+        except (Exception, asyncio.CancelledError) as exc:
+            if self._observation is not None:
+                self._observation.emit(
+                    "connection_error",
+                    pending_count=len(self.pending_requests),
+                    exception=exc,
+                )
+            raise
+        if self._observation is not None:
+            self._observation.emit(
+                "connection_ready", pending_count=len(self.pending_requests)
+            )
         self._message_handler_task = asyncio.create_task(self._handle_messages())
 
     async def stop(self):
@@ -296,7 +329,20 @@ class CDPClient:
 
         # Close the websocket connection
         if self.ws:
-            await self.ws.close()
+            try:
+                await self.ws.close()
+            except (Exception, asyncio.CancelledError) as exc:
+                if self._observation is not None:
+                    self._observation.emit(
+                        "connection_error",
+                        pending_count=len(self.pending_requests),
+                        exception=exc,
+                    )
+                raise
+            if self._observation is not None:
+                self._observation.emit(
+                    "connection_closed", pending_count=len(self.pending_requests)
+                )
             self.ws = None
 
     async def _handle_messages(self):
@@ -307,6 +353,10 @@ class CDPClient:
                     break
 
                 raw = await self.ws.recv()
+                if self._observation is not None:
+                    self._observation.emit(
+                        "receive", raw=raw, pending_count=len(self.pending_requests)
+                    )
                 data = json.loads(raw)
 
                 # Handle response messages (with id)
@@ -344,6 +394,12 @@ class CDPClient:
                     logger.warning(f"Received unexpected message: {data}")
 
         except websockets.exceptions.ConnectionClosed as e:
+            if self._observation is not None:
+                self._observation.emit(
+                    "connection_closed",
+                    pending_count=len(self.pending_requests),
+                    exception=e,
+                )
             logger.debug(f"WebSocket connection closed: {e}")
             # Connection closed, resolve all pending futures with an exception
             for future in self.pending_requests.values():
@@ -351,12 +407,26 @@ class CDPClient:
                     future.set_exception(ConnectionError("WebSocket connection closed"))
             self.pending_requests.clear()
         except Exception as e:
+            if self._observation is not None:
+                self._observation.emit(
+                    "receive_error",
+                    pending_count=len(self.pending_requests),
+                    exception=e,
+                )
             logger.error(f"Error in message handler: {e}")
             # Handle other exceptions
             for future in self.pending_requests.values():
                 if not future.done():
                     future.set_exception(e)
             self.pending_requests.clear()
+        except asyncio.CancelledError as exc:
+            if self._observation is not None:
+                self._observation.emit(
+                    "receive_cancelled",
+                    pending_count=len(self.pending_requests),
+                    exception=exc,
+                )
+            raise
 
     async def send_raw(
         self,
@@ -370,8 +440,9 @@ class CDPClient:
             )
 
         self.msg_id += 1
+        request_id = int(self.msg_id)
         msg = {
-            "id": int(self.msg_id),
+            "id": request_id,
             "method": method,
             "params": params or {},
         }
@@ -381,12 +452,58 @@ class CDPClient:
 
         # Create a future for this request
         future = asyncio.Future()
-        self.pending_requests[self.msg_id] = future
+        self.pending_requests[request_id] = future
 
-        await self.ws.send(json.dumps(msg))
+        raw = json.dumps(msg)
+        if self._observation is not None:
+            self._observation.emit(
+                "send",
+                raw=raw,
+                request_id=request_id,
+                method=method,
+                session_id=session_id,
+                pending_count=len(self.pending_requests),
+            )
+        try:
+            await self.ws.send(raw)
+        except (Exception, asyncio.CancelledError) as exc:
+            if self._observation is not None:
+                self._observation.emit(
+                    "send_error",
+                    request_id=request_id,
+                    method=method,
+                    session_id=session_id,
+                    pending_count=len(self.pending_requests),
+                    exception=exc,
+                )
+            raise
+        if self._observation is not None:
+            self._observation.emit(
+                "sent",
+                request_id=request_id,
+                method=method,
+                session_id=session_id,
+                pending_count=len(self.pending_requests),
+            )
+
+        # The observer owns any bounded retention. Do not keep a second full
+        # serialized payload alive while the original command awaits a reply.
+        del raw
 
         # Wait for the response
-        return await future
+        try:
+            return await future
+        except asyncio.CancelledError as exc:
+            if self._observation is not None:
+                self._observation.emit(
+                    "request_cancelled",
+                    request_id=request_id,
+                    method=method,
+                    session_id=session_id,
+                    pending_count=len(self.pending_requests),
+                    exception=exc,
+                )
+            raise
 
     async def emit_event(
         self,
