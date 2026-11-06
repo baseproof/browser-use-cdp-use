@@ -440,8 +440,9 @@ class CDPClient:
             )
 
         self.msg_id += 1
+        request_id = int(self.msg_id)
         msg = {
-            "id": int(self.msg_id),
+            "id": request_id,
             "method": method,
             "params": params or {},
         }
@@ -451,14 +452,14 @@ class CDPClient:
 
         # Create a future for this request
         future = asyncio.Future()
-        self.pending_requests[self.msg_id] = future
+        self.pending_requests[request_id] = future
 
         raw = json.dumps(msg)
         if self._observation is not None:
             self._observation.emit(
                 "send",
                 raw=raw,
-                request_id=msg["id"],
+                request_id=request_id,
                 method=method,
                 session_id=session_id,
                 pending_count=len(self.pending_requests),
@@ -469,7 +470,7 @@ class CDPClient:
             if self._observation is not None:
                 self._observation.emit(
                     "send_error",
-                    request_id=msg["id"],
+                    request_id=request_id,
                     method=method,
                     session_id=session_id,
                     pending_count=len(self.pending_requests),
@@ -479,7 +480,7 @@ class CDPClient:
         if self._observation is not None:
             self._observation.emit(
                 "sent",
-                request_id=msg["id"],
+                request_id=request_id,
                 method=method,
                 session_id=session_id,
                 pending_count=len(self.pending_requests),
@@ -496,7 +497,7 @@ class CDPClient:
             if self._observation is not None:
                 self._observation.emit(
                     "request_cancelled",
-                    request_id=msg["id"],
+                    request_id=request_id,
                     method=method,
                     session_id=session_id,
                     pending_count=len(self.pending_requests),
