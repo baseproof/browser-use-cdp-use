@@ -51,4 +51,3 @@ tasks:
     desc: Show current version
     cmds:
       - echo "cdp-use:" $(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-
